@@ -22,7 +22,6 @@ public class FeedDTO: NSManagedObject {
 class CoreDataFeedStore : FeedStore {
 	
 	private let model : NSManagedObjectModel
-	private let container : NSPersistentContainer
 	private let context : NSManagedObjectContext
 	private let storeURL : URL
 	
@@ -33,16 +32,12 @@ class CoreDataFeedStore : FeedStore {
 	init(storeURL : URL, bundle: Bundle) {
 		self.storeURL = storeURL
 		
-		self.model = bundle.url(forResource: self.modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }!
+		self.model = NSManagedObjectModel.load(modelName: self.modelName,
+											   bundle: bundle)
 		
-		self.container = NSPersistentContainer(name: self.modelName, managedObjectModel: self.model)
-		self.container.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
-		
-		var loadError : Error? = nil
-		self.container.loadPersistentStores { loadError = $1 }
-		loadError.map { _ in  }
-		
-		self.context = container.newBackgroundContext()
+		self.context = NSPersistentContainer.loadBackgroundContext(modelName: self.modelName,
+																   managedObjectModel: self.model,
+																   storeURL: storeURL)
 	}
 	
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
@@ -96,6 +91,23 @@ class CoreDataFeedStore : FeedStore {
 								  location: image.location,
 								  url: image.url)
 		}
+	}
+}
+
+extension NSManagedObjectModel {
+	static func load(modelName: String, bundle: Bundle) -> NSManagedObjectModel {
+		return bundle.url(forResource: modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }!
+	}
+}
+
+extension NSPersistentContainer {
+	static func loadBackgroundContext(modelName: String, managedObjectModel: NSManagedObjectModel, storeURL: URL) -> NSManagedObjectContext {
+		let container = NSPersistentContainer(name: modelName, managedObjectModel: managedObjectModel)
+		container.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
+				
+		container.loadPersistentStores { _,_ in }
+
+		return container.newBackgroundContext()
 	}
 }
 

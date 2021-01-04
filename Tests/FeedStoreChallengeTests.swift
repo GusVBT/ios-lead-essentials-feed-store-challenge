@@ -75,7 +75,7 @@ class CoreDataFeedStore : FeedStore {
 			return
 		}
 		
-		guard let latestFeed = feed.first else {
+		guard let latestFeed = feed.last else {
 			completion(.empty)
 			return
 		}
@@ -162,9 +162,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	func test_insert_overridesPreviouslyInsertedCacheValues() {
-		//		let sut = makeSUT()
-		//
-		//		assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
+		let sut = makeSUT()
+
+		assertThatInsertOverridesPreviouslyInsertedCacheValues(on: sut)
 	}
 	
 	func test_delete_deliversNoErrorOnEmptyCache() {

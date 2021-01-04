@@ -5,18 +5,97 @@
 import XCTest
 import FeedStoreChallenge
 
+@objc(LocalFeedImageDTO)
+public class LocalFeedImageDTO: NSManagedObject {
+	@NSManaged public var id               : UUID
+	@NSManaged public var imageDescription : String?
+	@NSManaged public var location         : String?
+	@NSManaged public var url              : URL
+}
+
+@objc(FeedDTO)
+public class FeedDTO: NSManagedObject {
+	@NSManaged public var feed      : NSOrderedSet
+	@NSManaged public var timestamp : Date
+}
 
 class CoreDataFeedStore : FeedStore {
-	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+	
+	private let model : NSManagedObjectModel
+	private let container : NSPersistentContainer
+	private let context : NSManagedObjectContext
+	private let storeURL : URL
+	
+	private let modelName = "DataModel"
+	private let imageEntityName = "LocalFeedImageDTO"
+	private let feedEntityName = "FeedDTO"
+	
+	init(storeURL : URL, bundle: Bundle) {
+		self.storeURL = storeURL
 		
+		self.model = bundle.url(forResource: self.modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }!
+		
+		self.container = NSPersistentContainer(name: self.modelName, managedObjectModel: self.model)
+		self.container.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
+		
+		var loadError : Error? = nil
+		self.container.loadPersistentStores { loadError = $1 }
+		loadError.map { _ in  }
+		
+		self.context = container.newBackgroundContext()
+	}
+	
+	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+
 	}
 	
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		
+		self.context.perform {
+			let feedManagedObject = NSEntityDescription.insertNewObject(forEntityName: self.feedEntityName, into: self.context) as! FeedDTO
+			var feedImagesManagedObject : [LocalFeedImageDTO] = []
+			
+			feed.forEach {
+				let image = LocalFeedImageDTO(context: self.context)
+				image.id = $0.id
+				image.imageDescription = $0.description
+				image.location = $0.location
+				image.url = $0.url
+				
+				feedImagesManagedObject.append(image)
+			}
+			
+			feedManagedObject.timestamp = timestamp
+			feedManagedObject.feed = NSOrderedSet(array: feedImagesManagedObject)
+
+			try? self.context.save()
+			completion(nil)
+		}
 	}
 	
 	func retrieve(completion: @escaping RetrievalCompletion) {
-		completion(.empty)
+		let fetchRequest  = NSFetchRequest<FeedDTO>(entityName: self.feedEntityName)
+		guard let feed = try? context.fetch(fetchRequest) else {
+			completion(.failure(NSError(domain: "any error", code: 0)));
+			return
+		}
+		
+		guard let latestFeed = feed.first else {
+			completion(.empty)
+			return
+		}
+
+		completion(.found(feed: DTOToLocal(DTO: latestFeed.feed), timestamp: latestFeed.timestamp))
+	}
+	
+	private func DTOToLocal(DTO: NSOrderedSet) -> [LocalFeedImage] {
+		return DTO.map {
+			let image = $0 as! LocalFeedImageDTO
+			return LocalFeedImage(id: image.id,
+								  description: image.imageDescription,
+								  location: image.location,
+								  url: image.url)
+		}
 	}
 }
 
@@ -45,11 +124,11 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 
 		assertThatRetrieveHasNoSideEffectsOnEmptyCache(on: sut)
 	}
-	
+
 	func test_retrieve_deliversFoundValuesOnNonEmptyCache() {
-		//		let sut = makeSUT()
-		//
-		//		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
+		let sut = makeSUT()
+
+		assertThatRetrieveDeliversFoundValuesOnNonEmptyCache(on: sut)
 	}
 	
 	func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
@@ -109,11 +188,12 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	// - MARK: Helpers
 	
 	private func makeSUT() -> FeedStore {
-		let sut = CoreDataFeedStore()
+		let storeURL = URL(fileURLWithPath: "/dev/null")
+		let bundle = Bundle(for: CoreDataFeedStore.self)
+		let sut = CoreDataFeedStore(storeURL: storeURL, bundle: bundle)
 		trackForMemoryLeaks(sut)
 		return sut
 	}
-	
 }
 
 //  ***********************

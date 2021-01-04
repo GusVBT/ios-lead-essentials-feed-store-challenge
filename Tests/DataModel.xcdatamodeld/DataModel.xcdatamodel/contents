@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17511" systemVersion="20B29" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="LocalFeedImageDTO" representedClassName="LocalFeedImageDTO" syncable="YES" codeGenerationType="class">
+    <entity name="FeedDTO" representedClassName="FeedDTO" syncable="YES">
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="feed" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="LocalFeedImageDTO" inverseName="feed" inverseEntity="LocalFeedImageDTO"/>
+    </entity>
+    <entity name="LocalFeedImageDTO" representedClassName="LocalFeedImageDTO" syncable="YES">
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="imageDescription" optional="YES" attributeType="String"/>
         <attribute name="location" optional="YES" attributeType="String"/>
         <attribute name="url" attributeType="URI"/>
+        <relationship name="feed" maxCount="1" deletionRule="Nullify" destinationEntity="FeedDTO" inverseName="feed" inverseEntity="FeedDTO"/>
     </entity>
     <elements>
-        <element name="LocalFeedImageDTO" positionX="-63" positionY="-18" width="128" height="89"/>
+        <element name="LocalFeedImageDTO" positionX="-364.630615234375" positionY="216.8626098632812" width="128" height="118"/>
+        <element name="FeedDTO" positionX="-63" positionY="9" width="128" height="73"/>
     </elements>
 </model>

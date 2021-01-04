@@ -41,10 +41,13 @@ class CoreDataFeedStore : FeedStore {
 	}
 	
 	func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-		let deleteFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.feedEntityName)
-		let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
-		_ = try? context.execute(deleteRequest)
-		completion(nil)
+		self.context.perform {
+			let deleteFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.feedEntityName)
+			let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
+			_ = try? self.context.execute(deleteRequest)
+			_ = try? self.context.save()
+			completion(nil)
+		}
 	}
 	
 	func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
@@ -195,9 +198,9 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	}
 	
 	func test_storeSideEffects_runSerially() {
-		//		let sut = makeSUT()
-		//
-		//		assertThatSideEffectsRunSerially(on: sut)
+		let sut = makeSUT()
+
+		assertThatSideEffectsRunSerially(on: sut)
 	}
 	
 	// - MARK: Helpers

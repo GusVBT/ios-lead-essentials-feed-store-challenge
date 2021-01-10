@@ -8,20 +8,6 @@
 
 import CoreData
 
-@objc(LocalFeedImageDTO)
-public class LocalFeedImageDTO: NSManagedObject {
-	@NSManaged public var id               : UUID
-	@NSManaged public var imageDescription : String?
-	@NSManaged public var location         : String?
-	@NSManaged public var url              : URL
-}
-
-@objc(FeedDTO)
-public class FeedDTO: NSManagedObject {
-	@NSManaged public var feed      : NSOrderedSet
-	@NSManaged public var timestamp : Date
-}
-
 public class CoreDataFeedStore : FeedStore {
 	
 	private let model : NSManagedObjectModel
@@ -117,7 +103,7 @@ public class CoreDataFeedStore : FeedStore {
 	}
 }
 
-private extension NSManagedObjectModel {
+fileprivate extension NSManagedObjectModel {
 	static func load(modelName: String, bundle: Bundle) throws -> NSManagedObjectModel {
 		let model = bundle.url(forResource: modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }
 		
@@ -129,7 +115,7 @@ private extension NSManagedObjectModel {
 	}
 }
 
-private extension NSPersistentContainer {
+fileprivate extension NSPersistentContainer {
 	static func loadBackgroundContext(modelName: String, managedObjectModel: NSManagedObjectModel, storeURL: URL) throws -> NSManagedObjectContext {
 		let container = NSPersistentContainer(name: modelName, managedObjectModel: managedObjectModel)
 		container.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]

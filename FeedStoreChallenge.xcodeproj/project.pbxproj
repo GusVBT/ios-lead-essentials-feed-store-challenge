@@ -20,6 +20,7 @@
 		08CE2BB52285BEF100183A1B /* FeedStoreChallengeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CE2BB42285BEF100183A1B /* FeedStoreChallengeTests.swift */; };
 		EE188FDC25ABA1C8002A1999 /* CoreDataFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE188FDB25ABA1C8002A1999 /* CoreDataFeedStore.swift */; };
 		EE33D45F25ABA5D700059DAE /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EE2C5249259AAA330011FE82 /* DataModel.xcdatamodeld */; };
+		EE33D46325ABACAA00059DAE /* CoreDataEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE33D46225ABACAA00059DAE /* CoreDataEntities.swift */; };
 		EE3A798B259AA5A5000CE18F /* XCTestCase+trackForMemoryLeaks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3A798A259AA5A5000CE18F /* XCTestCase+trackForMemoryLeaks.swift */; };
 /* End PBXBuildFile section */
 
@@ -50,6 +51,7 @@
 		08CE2BB42285BEF100183A1B /* FeedStoreChallengeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedStoreChallengeTests.swift; sourceTree = "<group>"; };
 		EE188FDB25ABA1C8002A1999 /* CoreDataFeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataFeedStore.swift; sourceTree = "<group>"; };
 		EE2C524A259AAA330011FE82 /* DataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DataModel.xcdatamodel; sourceTree = "<group>"; };
+		EE33D46225ABACAA00059DAE /* CoreDataEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataEntities.swift; sourceTree = "<group>"; };
 		EE3A798A259AA5A5000CE18F /* XCTestCase+trackForMemoryLeaks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+trackForMemoryLeaks.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -131,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				EE188FDB25ABA1C8002A1999 /* CoreDataFeedStore.swift */,
+				EE33D46225ABACAA00059DAE /* CoreDataEntities.swift */,
 				EE2C5249259AAA330011FE82 /* DataModel.xcdatamodeld */,
 			);
 			path = CoreDataFeedStore;
@@ -254,6 +257,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE33D46325ABACAA00059DAE /* CoreDataEntities.swift in Sources */,
 				EE188FDC25ABA1C8002A1999 /* CoreDataFeedStore.swift in Sources */,
 				EE33D45F25ABA5D700059DAE /* DataModel.xcdatamodeld in Sources */,
 				08CE2BA62285BCB600183A1B /* FeedStore.swift in Sources */,

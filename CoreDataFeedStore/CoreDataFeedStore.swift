@@ -93,12 +93,15 @@ public class CoreDataFeedStore : FeedStore {
 	}
 	
 	private func DTOToLocal(DTO: NSOrderedSet) -> [LocalFeedImage] {
-		return DTO.map {
-			let image = $0 as! LocalFeedImageDTO
-			return LocalFeedImage(id: image.id,
-								  description: image.imageDescription,
-								  location: image.location,
-								  url: image.url)
+		return DTO.compactMap {
+			if let image = $0 as? LocalFeedImageDTO {
+				return LocalFeedImage(id: image.id,
+									  description: image.imageDescription,
+									  location: image.location,
+									  url: image.url)
+			}
+			
+			return nil
 		}
 	}
 }

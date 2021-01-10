@@ -61,20 +61,9 @@ public class CoreDataFeedStore : FeedStore {
 		
 		self.context.perform {
 			let feedManagedObject = NSEntityDescription.insertNewObject(forEntityName: self.feedEntityName, into: self.context) as! FeedDTO
-			var feedImagesManagedObject : [LocalFeedImageDTO] = []
-			
-			feed.forEach {
-				let image = LocalFeedImageDTO(context: self.context)
-				image.id = $0.id
-				image.imageDescription = $0.description
-				image.location = $0.location
-				image.url = $0.url
-				
-				feedImagesManagedObject.append(image)
-			}
 			
 			feedManagedObject.timestamp = timestamp
-			feedManagedObject.feed = NSOrderedSet(array: feedImagesManagedObject)
+			feedManagedObject.feed = self.localToDTO(feed: feed)
 
 			do {
 				try self.context.save()
@@ -99,6 +88,22 @@ public class CoreDataFeedStore : FeedStore {
 		} catch {
 			completion(.failure(error))
 		}
+	}
+	
+	private func localToDTO(feed: [LocalFeedImage]) -> NSOrderedSet {
+		var feedImagesManagedObject : [LocalFeedImageDTO] = []
+		
+		feed.forEach {
+			let image = LocalFeedImageDTO(context: self.context)
+			image.id = $0.id
+			image.imageDescription = $0.description
+			image.location = $0.location
+			image.url = $0.url
+			
+			feedImagesManagedObject.append(image)
+		}
+		
+		return NSOrderedSet(array: feedImagesManagedObject)
 	}
 	
 	private func DTOToLocal(DTO: NSOrderedSet) -> [LocalFeedImage] {

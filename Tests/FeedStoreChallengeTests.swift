@@ -29,13 +29,13 @@ class CoreDataFeedStore : FeedStore {
 	private let imageEntityName = "LocalFeedImageDTO"
 	private let feedEntityName = "FeedDTO"
 	
-	init(storeURL : URL, bundle: Bundle) {
+	init(storeURL : URL, bundle: Bundle) throws {
 		self.storeURL = storeURL
 		
-		self.model = NSManagedObjectModel.load(modelName: self.modelName,
+		self.model = try NSManagedObjectModel.load(modelName: self.modelName,
 											   bundle: bundle)
 		
-		self.context = NSPersistentContainer.loadBackgroundContext(modelName: self.modelName,
+		self.context = try NSPersistentContainer.loadBackgroundContext(modelName: self.modelName,
 																   managedObjectModel: self.model,
 																   storeURL: storeURL)
 	}
@@ -44,9 +44,13 @@ class CoreDataFeedStore : FeedStore {
 		self.context.perform {
 			let deleteFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.feedEntityName)
 			let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
-			_ = try? self.context.execute(deleteRequest)
-			_ = try? self.context.save()
-			completion(nil)
+			do {
+				try self.context.execute(deleteRequest)
+				try self.context.save()
+				completion(nil)
+			} catch {
+				completion(error)
+			}
 		}
 	}
 	
@@ -69,24 +73,29 @@ class CoreDataFeedStore : FeedStore {
 			feedManagedObject.timestamp = timestamp
 			feedManagedObject.feed = NSOrderedSet(array: feedImagesManagedObject)
 
-			try? self.context.save()
-			completion(nil)
+			do {
+				try self.context.save()
+				completion(nil)
+			} catch {
+				completion(error)
+			}
 		}
 	}
 	
 	func retrieve(completion: @escaping RetrievalCompletion) {
 		let fetchRequest  = NSFetchRequest<FeedDTO>(entityName: self.feedEntityName)
-		guard let feed = try? context.fetch(fetchRequest) else {
-			completion(.failure(NSError(domain: "any error", code: 0)));
-			return
-		}
 		
-		guard let latestFeed = feed.last else {
-			completion(.empty)
-			return
+		do {
+			let feed = try context.fetch(fetchRequest)
+			
+			if let latestFeed = feed.last {
+				completion(.found(feed: DTOToLocal(DTO: latestFeed.feed), timestamp: latestFeed.timestamp))
+			} else {
+				completion(.empty)
+			}
+		} catch {
+			completion(.failure(error))
 		}
-
-		completion(.found(feed: DTOToLocal(DTO: latestFeed.feed), timestamp: latestFeed.timestamp))
 	}
 	
 	private func DTOToLocal(DTO: NSOrderedSet) -> [LocalFeedImage] {
@@ -101,17 +110,30 @@ class CoreDataFeedStore : FeedStore {
 }
 
 extension NSManagedObjectModel {
-	static func load(modelName: String, bundle: Bundle) -> NSManagedObjectModel {
-		return bundle.url(forResource: modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }!
+	static func load(modelName: String, bundle: Bundle) throws -> NSManagedObjectModel {
+		let model = bundle.url(forResource: modelName, withExtension: "momd").flatMap { NSManagedObjectModel(contentsOf: $0) }
+		
+		if let loadedModel = model {
+			return loadedModel
+		} else {
+			throw NSError(domain: "Failed to load \(modelName) on Bundle \(bundle)", code: 0)
+		}
 	}
 }
 
 extension NSPersistentContainer {
-	static func loadBackgroundContext(modelName: String, managedObjectModel: NSManagedObjectModel, storeURL: URL) -> NSManagedObjectContext {
+	static func loadBackgroundContext(modelName: String, managedObjectModel: NSManagedObjectModel, storeURL: URL) throws -> NSManagedObjectContext {
 		let container = NSPersistentContainer(name: modelName, managedObjectModel: managedObjectModel)
 		container.persistentStoreDescriptions = [NSPersistentStoreDescription(url: storeURL)]
-				
-		container.loadPersistentStores { _,_ in }
+			
+		var receivedError : Error? = nil
+		container.loadPersistentStores { _, error in
+			receivedError = error
+		}
+		
+		if let error = receivedError {
+			throw error
+		}
 
 		return container.newBackgroundContext()
 	}
@@ -208,7 +230,8 @@ class FeedStoreChallengeTests: XCTestCase, FeedStoreSpecs {
 	private func makeSUT() -> FeedStore {
 		let storeURL = URL(fileURLWithPath: "/dev/null")
 		let bundle = Bundle(for: CoreDataFeedStore.self)
-		let sut = CoreDataFeedStore(storeURL: storeURL, bundle: bundle)
+		
+		let sut = try! CoreDataFeedStore(storeURL: storeURL, bundle: bundle)
 		trackForMemoryLeaks(sut)
 		return sut
 	}

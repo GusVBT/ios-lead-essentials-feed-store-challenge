@@ -81,7 +81,7 @@ class FeedStoreIntegrationTests: XCTestCase {
 	}
 	
 	private func storeURL() -> URL {
-		let cachesDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+		let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
 		let storeURL = cachesDirectory.appendingPathComponent("\(type(of: self)).store")
 		return storeURL
 	}

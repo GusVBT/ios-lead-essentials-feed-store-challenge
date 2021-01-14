@@ -10,18 +10,17 @@ import CoreData
 
 public class CoreDataFeedStore : FeedStore {
 	
-	private let model : NSManagedObjectModel
 	private let context : NSManagedObjectContext
 	
 	private let modelName = "DataModel"
 	private let feedEntityName = "FeedDTO"
 	
 	public init(storeURL : URL, bundle: Bundle) throws {
-		self.model = try NSManagedObjectModel.load(modelName: self.modelName,
+		let model = try NSManagedObjectModel.load(modelName: self.modelName,
 											   bundle: bundle)
 		
 		self.context = try NSPersistentContainer.loadBackgroundContext(modelName: self.modelName,
-																   managedObjectModel: self.model,
+																   managedObjectModel: model,
 																   storeURL: storeURL)
 	}
 	

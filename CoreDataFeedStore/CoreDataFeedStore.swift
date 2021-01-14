@@ -41,7 +41,7 @@ public class CoreDataFeedStore : FeedStore {
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
 		
 		self.context.perform {
-			let feedManagedObject = NSEntityDescription.insertNewObject(forEntityName: self.feedEntityName, into: self.context) as! FeedDTO
+			let feedManagedObject = FeedDTO(context: self.context)
 			
 			feedManagedObject.timestamp = timestamp
 			feedManagedObject.feed = self.localToDTO(feed: feed)

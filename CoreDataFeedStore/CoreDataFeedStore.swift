@@ -26,11 +26,8 @@ public class CoreDataFeedStore : FeedStore {
 	
 	public func deleteCachedFeed(completion: @escaping DeletionCompletion) {
 		self.context.perform {
-			let deleteFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.feedEntityName)
-			let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
 			do {
-				try self.context.execute(deleteRequest)
-				try self.context.save()
+				try self.clearCache()
 				completion(nil)
 			} catch {
 				completion(error)
@@ -39,15 +36,10 @@ public class CoreDataFeedStore : FeedStore {
 	}
 	
 	public func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping InsertionCompletion) {
-		
 		self.context.perform {
-			let feedManagedObject = FeedDTO(context: self.context)
-			
-			feedManagedObject.timestamp = timestamp
-			feedManagedObject.feed = self.localToDTO(feed: feed)
-
 			do {
-				try self.context.save()
+				try self.clearCache()
+				try self.insert(feed, timestamp: timestamp)
 				completion(nil)
 			} catch {
 				completion(error)
@@ -61,7 +53,7 @@ public class CoreDataFeedStore : FeedStore {
 		do {
 			let feed = try context.fetch(fetchRequest)
 			
-			if let latestFeed = feed.last {
+			if let latestFeed = feed.first {
 				completion(.found(feed: DTOToLocal(DTO: latestFeed.feed), timestamp: latestFeed.timestamp))
 			} else {
 				completion(.empty)
@@ -69,6 +61,22 @@ public class CoreDataFeedStore : FeedStore {
 		} catch {
 			completion(.failure(error))
 		}
+	}
+	
+	private func clearCache() throws {
+		let deleteFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: self.feedEntityName)
+		let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetchRequest)
+		
+		try self.context.execute(deleteRequest)
+		try self.context.saveIfNeeded()
+	}
+	
+	private func insert(_ feed: [LocalFeedImage], timestamp: Date) throws {
+		let feedManagedObject = FeedDTO(context: self.context)
+		feedManagedObject.timestamp = timestamp
+		feedManagedObject.feed = self.localToDTO(feed: feed)
+		
+		try self.context.saveIfNeeded()
 	}
 	
 	private func localToDTO(feed: [LocalFeedImage]) -> NSOrderedSet {
@@ -97,6 +105,14 @@ public class CoreDataFeedStore : FeedStore {
 			}
 			
 			return nil
+		}
+	}
+}
+
+fileprivate extension NSManagedObjectContext {
+	func saveIfNeeded() throws {
+		if self.hasChanges {
+			try self.save()
 		}
 	}
 }

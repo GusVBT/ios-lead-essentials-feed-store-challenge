@@ -12,15 +12,11 @@ public class CoreDataFeedStore : FeedStore {
 	
 	private let model : NSManagedObjectModel
 	private let context : NSManagedObjectContext
-	private let storeURL : URL
 	
 	private let modelName = "DataModel"
-	private let imageEntityName = "LocalFeedImageDTO"
 	private let feedEntityName = "FeedDTO"
 	
 	public init(storeURL : URL, bundle: Bundle) throws {
-		self.storeURL = storeURL
-		
 		self.model = try NSManagedObjectModel.load(modelName: self.modelName,
 											   bundle: bundle)
 		
